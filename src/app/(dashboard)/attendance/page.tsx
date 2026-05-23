@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import {
   Calendar,
@@ -29,10 +29,12 @@ interface Employee {
   salary: number;
 }
 
+type AttendanceStatus = "present" | "absent" | "half_day" | "leave" | "holiday";
+
 interface AttendanceRecord {
   employee: Employee;
   attendance: {
-    status: "present" | "absent" | "half_day" | "leave" | "holiday";
+    status: AttendanceStatus;
     otHours: number;
     notes: string;
     isNew?: boolean;
@@ -58,7 +60,7 @@ export default function AttendancePage() {
   const presentOpacity = useTransform(x, [0, 100], [0, 1]);
   const absentOpacity = useTransform(x, [-100, 0], [1, 0]);
 
-  const fetchAttendance = async () => {
+  const fetchAttendance = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/attendance?date=${selectedDate}`);
@@ -86,11 +88,11 @@ export default function AttendancePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchAttendance();
-  }, [selectedDate]);
+  }, [fetchAttendance]);
 
   // Keyboard shortcuts listener for high-speed desktop entries
   useEffect(() => {
@@ -108,7 +110,7 @@ export default function AttendancePage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [viewMode, currentIndex, records, markedRecords]);
 
-  const handleMark = (empId: string, status: any, otHours?: number, notes?: string) => {
+  const handleMark = (empId: string, status: AttendanceStatus | null, otHours?: number, notes?: string) => {
     const current = markedRecords[empId] || {
       employeeId: empId,
       status: "present",
@@ -128,7 +130,7 @@ export default function AttendancePage() {
   };
 
   // Navigating card swiper
-  const handleSwipe = (direction: "left" | "right") => {
+  function handleSwipe(direction: "left" | "right") {
     if (records.length === 0) return;
     const currentEmp = records[currentIndex].employee;
     const status = direction === "right" ? "present" : "absent";
@@ -139,7 +141,7 @@ export default function AttendancePage() {
     if (currentIndex < records.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     }
-  };
+  }
 
   const handleNext = () => {
     if (currentIndex < records.length - 1) {

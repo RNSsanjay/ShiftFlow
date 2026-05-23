@@ -1,22 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Bot,
-  Mic,
-  MicOff,
-  Send,
-  Sparkles,
-  Terminal,
-  Play,
-  CheckCircle2,
-  AlertTriangle,
-  HelpCircle,
-  Loader2,
-  ArrowRight,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Bot, Mic, MicOff, Send, Terminal, HelpCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  onresult: ((event: { results: Array<Array<{ transcript: string }>> }) => void) | null;
+  start: () => void;
+  stop: () => void;
+}
 
 export default function AITerminalPage() {
   const router = useRouter();
@@ -25,7 +23,7 @@ export default function AITerminalPage() {
   
   // Voice recognition states
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
+  const [recognition, setRecognition] = useState<SpeechRecognitionLike | null>(null);
   const [voiceSupport, setVoiceSupport] = useState(false);
 
   // Command result log
@@ -39,7 +37,13 @@ export default function AITerminalPage() {
 
   useEffect(() => {
     // Initialize Web Speech API if supported
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = ((window as unknown) as {
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    }).SpeechRecognition || ((window as unknown) as {
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    }).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
       rec.continuous = false;
@@ -51,7 +55,7 @@ export default function AITerminalPage() {
         addLog("Voice input activated. Listening...", "system");
       };
 
-      rec.onerror = (event: any) => {
+      rec.onerror = (event: { error: string }) => {
         console.error("Speech recognition error:", event.error);
         addLog(`Voice input error: ${event.error}. Please try typing instead.`, "error");
         setIsListening(false);
@@ -61,7 +65,7 @@ export default function AITerminalPage() {
         setIsListening(false);
       };
 
-      rec.onresult = (event: any) => {
+      rec.onresult = (event: { results: Array<Array<{ transcript: string }>> }) => {
         const transcript = event.results[0][0].transcript;
         setCommand(transcript);
         addLog(`Recognized: "${transcript}"`, "user");
@@ -131,7 +135,7 @@ export default function AITerminalPage() {
     };
   }, [isListening]);
 
-  const addLog = (text: string, type: "user" | "system" | "success" | "error") => {
+  function addLog(text: string, type: "user" | "system" | "success" | "error") {
     setLogs((prev) => [
       ...prev,
       {
@@ -140,7 +144,7 @@ export default function AITerminalPage() {
         date: new Date().toLocaleTimeString(),
       },
     ]);
-  };
+  }
 
   const handleToggleVoice = () => {
     if (!voiceSupport || !recognition) {
@@ -155,7 +159,7 @@ export default function AITerminalPage() {
     }
   };
 
-  const executeAICommand = async (cmdText: string) => {
+  async function executeAICommand(cmdText: string) {
     const trimmed = cmdText.trim();
     if (!trimmed) return;
 
@@ -341,7 +345,7 @@ export default function AITerminalPage() {
               onClick={() => setCommand(cmd)}
               className="p-2.5 text-left border border-slate-800 hover:bg-slate-850 rounded-xl transition cursor-pointer text-slate-300"
             >
-              "{cmd}"
+              &quot;{cmd}&quot;
             </button>
           ))}
         </div>

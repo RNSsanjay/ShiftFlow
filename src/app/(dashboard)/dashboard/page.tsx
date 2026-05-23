@@ -8,7 +8,6 @@ import {
   CalendarDays,
   Clock,
   CircleDollarSign,
-  TrendingUp,
   BrainCircuit,
   AlertTriangle,
   ArrowUpRight,
@@ -30,7 +29,6 @@ import {
   Line,
 } from "recharts";
 import { useStore } from "@/store/useStore";
-import { useTheme } from "@/components/Providers";
 
 interface DashboardStats {
   totalEmployees: number;
@@ -55,7 +53,6 @@ interface AIInsights {
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const { theme } = useTheme();
   const { isOnline } = useStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [aiInsights, setAiInsights] = useState<AIInsights | null>(null);
@@ -64,7 +61,12 @@ export default function DashboardPage() {
 
   // Fetch metrics
   useEffect(() => {
-    async function fetchStats() {
+    const loadStats = async () => {
+      if (!isOnline) {
+        setStatsLoading(false);
+        return;
+      }
+
       try {
         const res = await fetch("/api/dashboard/stats");
         if (res.ok) {
@@ -76,18 +78,19 @@ export default function DashboardPage() {
       } finally {
         setStatsLoading(false);
       }
-    }
+    };
 
-    if (isOnline) {
-      fetchStats();
-    } else {
-      setStatsLoading(false);
-    }
+    loadStats();
   }, [isOnline]);
 
   // Fetch AI insights
   useEffect(() => {
-    async function fetchAIInsights() {
+    const loadAIInsights = async () => {
+      if (!isOnline) {
+        setAiLoading(false);
+        return;
+      }
+
       try {
         const res = await fetch("/api/ai/insights");
         if (res.ok) {
@@ -99,13 +102,9 @@ export default function DashboardPage() {
       } finally {
         setAiLoading(false);
       }
-    }
+    };
 
-    if (isOnline) {
-      fetchAIInsights();
-    } else {
-      setAiLoading(false);
-    }
+    loadAIInsights();
   }, [isOnline]);
 
   if (statsLoading) {
@@ -119,7 +118,7 @@ export default function DashboardPage() {
     );
   }
 
-  const companyCurrency = (session?.user as any)?.currency || "INR";
+  const companyCurrency = ((session?.user as { currency?: string })?.currency) ?? "INR";
   const currencySymbol = companyCurrency === "USD" ? "$" : companyCurrency === "EUR" ? "€" : "₹";
 
   return (
@@ -143,7 +142,7 @@ export default function DashboardPage() {
             Welcome back, {session?.user?.name}
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Here's what's happening with your workforce today.
+            Here&apos;s what&apos;s happening with your workforce today.
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs bg-slate-900 px-3.5 py-2 border border-slate-850 rounded-xl font-medium">
@@ -407,7 +406,7 @@ export default function DashboardPage() {
                       AI Cost Forecasting
                     </span>
                     <p className="text-slate-300 leading-relaxed italic bg-indigo-500/5 p-2 rounded-lg border border-indigo-500/10">
-                      "{aiInsights.forecasting}"
+                      &quot;{aiInsights.forecasting}&quot;
                     </p>
                   </div>
                 )}

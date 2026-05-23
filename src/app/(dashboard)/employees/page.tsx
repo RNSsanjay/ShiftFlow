@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import * as XLSX from "xlsx";
 import {
   Users,
@@ -68,14 +68,34 @@ export default function EmployeesPage() {
 
   // Bulk Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
+  interface BulkPreviewItem {
+    index: number;
+    row: {
+      name?: string;
+      phone?: string;
+      employeeType?: string;
+      department?: string;
+      salary?: number;
+      joiningDate?: string;
+      status?: string;
+      [key: string]: unknown;
+    };
+    name?: string;
+    department?: string;
+    status?: string;
+    salary?: number;
+    joiningDate?: string;
+    errors: string[];
+  }
+
   const [bulkFile, setBulkFile] = useState<File | null>(null);
-  const [bulkPreview, setBulkPreview] = useState<any[]>([]);
+  const [bulkPreview, setBulkPreview] = useState<BulkPreviewItem[]>([]);
   const [bulkHasErrors, setBulkHasErrors] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkError, setBulkError] = useState("");
 
   // Fetch Employees
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -90,7 +110,7 @@ export default function EmployeesPage() {
         
         // Extract unique departments
         const depts = new Set<string>();
-        (data.employees || []).forEach((e: any) => {
+        (data.employees || []).forEach((e: { department?: string }) => {
           if (e.department) depts.add(e.department);
         });
         setDepartments(Array.from(depts));
@@ -100,11 +120,11 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, selectedDept, selectedStatus]);
 
   useEffect(() => {
     fetchEmployees();
-  }, [search, selectedDept, selectedStatus]);
+  }, [fetchEmployees]);
 
   // Download Sample Excel
   const downloadSampleExcel = () => {
@@ -564,7 +584,7 @@ export default function EmployeesPage() {
                     <label className="block text-slate-500 mb-1">Status</label>
                     <select
                       value={formEmployee.status}
-                      onChange={(e) => setFormEmployee((prev) => ({ ...prev, status: e.target.value as any }))}
+                      onChange={(e) => setFormEmployee((prev) => ({ ...prev, status: e.target.value as EmployeeType["status"] }))}
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 focus:outline-none"
                     >
                       <option value="active">Active</option>
