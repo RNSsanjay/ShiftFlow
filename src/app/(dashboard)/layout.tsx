@@ -25,7 +25,9 @@ import {
   X,
   User as UserIcon,
   Circle,
+  Clock,
 } from "lucide-react";
+import AIChatWidget from "@/components/AIChatWidget";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -34,7 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { theme, toggleTheme } = useTheme();
   
   // Zustand State
-  const { isOnline, setIsOnline, attendanceQueue, removeAttendanceFromQueue } = useStore();
+  const { isOnline, setIsOnline, attendanceQueue, removeAttendanceFromQueue, activeShift, setActiveShift } = useStore();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -321,7 +323,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Content Area */}
         <main className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 overflow-y-auto pb-24 lg:pb-8">
+          {/* Global Roster Top Navbar (Shift Switcher) */}
+          <div className="hidden lg:flex items-center justify-between pb-4 mb-6 border-b border-slate-900 shrink-0">
+            <div>
+              <span className="text-[9px] uppercase tracking-widest text-slate-600 font-extrabold">Active Session</span>
+              <h2 className="text-xs font-bold text-white flex items-center gap-1.5 mt-0.5">
+                Shift Roster Control Centre
+              </h2>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {/* Shift Switcher Dropdown */}
+              <div className="flex items-center gap-2 bg-slate-900 border border-slate-850 px-3.5 py-1.5 rounded-xl">
+                <Clock className="w-4 h-4 text-blue-500" />
+                <span className="text-[10px] uppercase font-bold text-slate-400">Roster Shift:</span>
+                <select
+                  value={activeShift}
+                  onChange={(e) => setActiveShift(e.target.value)}
+                  className="bg-transparent text-xs font-bold text-white focus:outline-none border-none cursor-pointer pr-1"
+                >
+                  <option value="all">All Shifts</option>
+                  <option value="General Shift (09:00 AM - 05:00 PM)">General Shift (09:00 AM - 05:00 PM)</option>
+                  <option value="Shift 1 (06:00 AM - 02:00 PM)">Shift 1 (06:00 AM - 02:00 PM)</option>
+                  <option value="Shift 2 (02:00 PM - 10:00 PM)">Shift 2 (02:00 PM - 10:00 PM)</option>
+                  <option value="Shift 3 (10:00 PM - 06:00 AM)">Shift 3 (10:00 PM - 06:00 AM)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Shift Switcher (renders right under header) */}
+          <div className="lg:hidden flex items-center justify-between pb-3 mb-4 border-b border-slate-900 shrink-0">
+            <span className="text-[9px] uppercase font-bold text-slate-550">Roster Shift:</span>
+            <select
+              value={activeShift}
+              onChange={(e) => setActiveShift(e.target.value)}
+              className="bg-slate-900 border border-slate-850 text-xs font-bold text-white px-2.5 py-1 rounded-xl focus:outline-none"
+            >
+              <option value="all">All Shifts</option>
+              <option value="General Shift (09:00 AM - 05:00 PM)">General Shift</option>
+              <option value="Shift 1 (06:00 AM - 02:00 PM)">Shift 1</option>
+              <option value="Shift 2 (02:00 PM - 10:00 PM)">Shift 2</option>
+              <option value="Shift 3 (10:00 PM - 06:00 AM)">Shift 3</option>
+            </select>
+          </div>
+          
           {children}
+          <AIChatWidget />
         </main>
 
         {/* Mobile Navigation bar at bottom */}

@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, phone, employeeType, department, salary, joiningDate, otEligible, pfEnabled, esiEnabled } = body;
+    const { name, phone, employeeType, department, salary, joiningDate, otEligible, pfEnabled, esiEnabled, shift } = body;
 
     if (!name || !phone || !employeeType || !department || salary === undefined) {
       return NextResponse.json(
@@ -92,8 +92,9 @@ export async function POST(req: Request) {
       salary: Number(salary) || 0,
       joiningDate: joiningDate ? new Date(joiningDate) : new Date(),
       otEligible: otEligible !== undefined ? !!otEligible : true,
-      pfEnabled: pfEnabled !== undefined ? !!pfEnabled : true,
-      esiEnabled: esiEnabled !== undefined ? !!esiEnabled : true,
+      pfEnabled: pfEnabled !== undefined ? !!pfEnabled : false,
+      esiEnabled: esiEnabled !== undefined ? !!esiEnabled : false,
+      shift: shift || "General Shift (09:00 AM - 05:00 PM)",
       companyId: session.user.companyId,
       status: "active",
     });

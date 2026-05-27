@@ -21,7 +21,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, phone, employeeType, department, salary, joiningDate, status, otEligible, pfEnabled, esiEnabled } = body;
+    const { name, phone, employeeType, department, salary, joiningDate, status, otEligible, pfEnabled, esiEnabled, shift } = body;
 
     await connectToDatabase();
 
@@ -63,6 +63,7 @@ export async function PUT(
         otEligible: otEligible !== undefined ? !!otEligible : employee.otEligible,
         pfEnabled: pfEnabled !== undefined ? !!pfEnabled : employee.pfEnabled,
         esiEnabled: esiEnabled !== undefined ? !!esiEnabled : employee.esiEnabled,
+        shift: shift ?? employee.shift,
       },
       { new: true }
     );

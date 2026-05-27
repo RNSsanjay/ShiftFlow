@@ -6,18 +6,25 @@ import { Attendance } from "@/models/Attendance";
 import { Payroll } from "@/models/Payroll";
 import mongoose from "mongoose";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await auth();
     if (!session || !session.user || !session.user.companyId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const shiftFilter = searchParams.get("shift"); // "all" or specific shift name
+
     await connectToDatabase();
     const companyId = session.user.companyId;
 
-    // 1. Total Employees count
-    const totalEmployees = await Employee.countDocuments({ companyId, status: "active" });
+    // 1. Total Employees count (filtered by shift)
+    const query: any = { companyId, status: "active" };
+    if (shiftFilter && shiftFilter !== "all") {
+      query.shift = shiftFilter;
+    }
+    const totalEmployees = await Employee.countDocuments(query);
 
     // 2. Attendance Stats - Today
     const todayStart = new Date();
@@ -25,10 +32,18 @@ export async function GET() {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
-    const attendancesToday = await Attendance.find({
+    const attendanceQuery: any = {
       companyId,
       date: { $gte: todayStart, $lte: todayEnd },
-    });
+    };
+
+    if (shiftFilter && shiftFilter !== "all") {
+      const shiftEmployees = await Employee.find({ companyId, shift: shiftFilter }).select("_id");
+      const employeeIds = shiftEmployees.map((e) => e._id);
+      attendanceQuery.employeeId = { $in: employeeIds };
+    }
+
+    const attendancesToday = await Attendance.find(attendanceQuery);
 
     let presentToday = 0;
     let absentToday = 0;
@@ -67,10 +82,18 @@ export async function GET() {
       const dEnd = new Date(d);
       dEnd.setHours(23, 59, 59, 999);
 
-      const dayRecords = await Attendance.find({
+      const dayQuery: any = {
         companyId,
         date: { $gte: d, $lte: dEnd },
-      });
+      };
+
+      if (shiftFilter && shiftFilter !== "all") {
+        const shiftEmployees = await Employee.find({ companyId, shift: shiftFilter }).select("_id");
+        const employeeIds = shiftEmployees.map((e) => e._id);
+        dayQuery.employeeId = { $in: employeeIds };
+      }
+
+      const dayRecords = await Attendance.find(dayQuery);
 
       let pres = 0;
       let half = 0;
@@ -117,8 +140,12 @@ export async function GET() {
     }
 
     // 6. Department Distribution Aggregation
+    const matchStage: any = { companyId: new mongoose.Types.ObjectId(companyId), status: "active" };
+    if (shiftFilter && shiftFilter !== "all") {
+      matchStage.shift = shiftFilter;
+    }
     const departments = await Employee.aggregate([
-      { $match: { companyId: new mongoose.Types.ObjectId(companyId), status: "active" } },
+      { $match: matchStage },
       { $group: { _id: "$department", count: { $sum: 1 } } }
     ]);
     const departmentDistribution = departments.map(d => ({

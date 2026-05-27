@@ -16,8 +16,10 @@ import {
   CheckCircle,
   AlertTriangle,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import AIRosterImporter from "@/components/AIRosterImporter";
 
 interface EmployeeType {
   _id: string;
@@ -31,6 +33,7 @@ interface EmployeeType {
   otEligible: boolean;
   pfEnabled: boolean;
   esiEnabled: boolean;
+  shift?: string;
 }
 
 export default function EmployeesPage() {
@@ -47,6 +50,7 @@ export default function EmployeesPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
 
   // Form State
   const [formEmployee, setFormEmployee] = useState({
@@ -58,8 +62,9 @@ export default function EmployeesPage() {
     salary: 0,
     joiningDate: new Date().toISOString().split("T")[0],
     otEligible: true,
-    pfEnabled: true,
-    esiEnabled: true,
+    pfEnabled: false,
+    esiEnabled: false,
+    shift: "General Shift (09:00 AM - 05:00 PM)",
     status: "active",
   });
 
@@ -274,8 +279,9 @@ export default function EmployeesPage() {
       salary: 0,
       joiningDate: new Date().toISOString().split("T")[0],
       otEligible: true,
-      pfEnabled: true,
-      esiEnabled: true,
+      pfEnabled: false,
+      esiEnabled: false,
+      shift: "General Shift (09:00 AM - 05:00 PM)",
       status: "active",
     });
     setFormError("");
@@ -294,6 +300,7 @@ export default function EmployeesPage() {
       otEligible: emp.otEligible,
       pfEnabled: emp.pfEnabled,
       esiEnabled: emp.esiEnabled,
+      shift: emp.shift || "General Shift (09:00 AM - 05:00 PM)",
       status: emp.status,
     });
     setFormError("");
@@ -315,6 +322,12 @@ export default function EmployeesPage() {
         </div>
 
         <div className="flex gap-2">
+          <button
+            onClick={() => setAiModalOpen(true)}
+            className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md cursor-pointer transition active:scale-[0.98] border border-blue-500/10 hover:shadow-blue-500/20"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" /> AI Roster Scan
+          </button>
           <button
             onClick={() => setBulkModalOpen(true)}
             className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-xs font-semibold px-3 py-2 rounded-xl transition cursor-pointer"
@@ -388,6 +401,7 @@ export default function EmployeesPage() {
                 <th className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">Name</th>
                 <th className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">Phone</th>
                 <th className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">Department</th>
+                <th className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">Shift</th>
                 <th className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">Classification</th>
                 <th className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">Salary Baseline</th>
                 <th className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">Deductions</th>
@@ -404,6 +418,9 @@ export default function EmployeesPage() {
                   <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400">{emp.phone}</td>
                   <td className="px-5 py-3.5">
                     <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-semibold">{emp.department}</span>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 font-semibold text-[10px]">{emp.shift || "General Shift (09:00 AM - 05:00 PM)"}</span>
                   </td>
                   <td className="px-5 py-3.5 uppercase tracking-wider font-bold">
                     <span className={emp.employeeType === "staff" ? "text-indigo-600 dark:text-indigo-400" : "text-amber-600 dark:text-amber-400"}>
@@ -526,14 +543,22 @@ export default function EmployeesPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-500 mb-1">Salary Baseline</label>
+                    <label className="block text-slate-500 mb-1">Shift Schedule & Timings</label>
                     <input
-                      type="number"
+                      type="text"
+                      list="shift-templates"
                       required
-                      value={formEmployee.salary}
-                      onChange={(e) => setFormEmployee((prev) => ({ ...prev, salary: Number(e.target.value) }))}
+                      value={formEmployee.shift}
+                      onChange={(e) => setFormEmployee((prev) => ({ ...prev, shift: e.target.value }))}
+                      placeholder="e.g. General Shift (09:00 AM - 05:00 PM)"
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-transparent focus:outline-none"
                     />
+                    <datalist id="shift-templates">
+                      <option value="General Shift (09:00 AM - 05:00 PM)" />
+                      <option value="Shift 1 (06:00 AM - 02:00 PM)" />
+                      <option value="Shift 2 (02:00 PM - 10:00 PM)" />
+                      <option value="Shift 3 (10:00 PM - 06:00 AM)" />
+                    </datalist>
                   </div>
                   <div>
                     <label className="block text-slate-500 mb-1">Joining Date</label>
@@ -542,6 +567,19 @@ export default function EmployeesPage() {
                       required
                       value={formEmployee.joiningDate}
                       onChange={(e) => setFormEmployee((prev) => ({ ...prev, joiningDate: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-transparent focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1">
+                  <div>
+                    <label className="block text-slate-500 mb-1">Salary Baseline</label>
+                    <input
+                      type="number"
+                      required
+                      value={formEmployee.salary}
+                      onChange={(e) => setFormEmployee((prev) => ({ ...prev, salary: Number(e.target.value) }))}
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-transparent focus:outline-none"
                     />
                   </div>
@@ -779,6 +817,12 @@ export default function EmployeesPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <AIRosterImporter
+        isOpen={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        onImportComplete={fetchEmployees}
+      />
 
     </div>
   );

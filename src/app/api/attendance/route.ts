@@ -15,6 +15,8 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const dateStr = searchParams.get("date"); // YYYY-MM-DD
+    const shiftFilter = searchParams.get("shift");
+
     if (!dateStr) {
       return NextResponse.json({ error: "Date parameter is required" }, { status: 400 });
     }
@@ -27,11 +29,15 @@ export async function GET(req: Request) {
 
     await connectToDatabase();
 
-    // 1. Get all active employees
-    const employees = await Employee.find({
+    // 1. Get all active employees (filtered by shift if provided)
+    const empQuery: any = {
       companyId: session.user.companyId,
       status: "active",
-    }).sort({ name: 1 });
+    };
+    if (shiftFilter && shiftFilter !== "all") {
+      empQuery.shift = shiftFilter;
+    }
+    const employees = await Employee.find(empQuery).sort({ name: 1 });
 
     // 2. Get attendance for the date range
     const attendanceRecords = await Attendance.find({

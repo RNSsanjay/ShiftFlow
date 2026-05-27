@@ -13,6 +13,7 @@ export interface IEmployee extends Document {
   otEligible: boolean;
   pfEnabled: boolean;
   esiEnabled: boolean;
+  shift: string;
   companyId: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +31,7 @@ const EmployeeSchema: Schema = new Schema(
     otEligible: { type: Boolean, default: true },
     pfEnabled: { type: Boolean, default: true },
     esiEnabled: { type: Boolean, default: true },
+    shift: { type: String, default: "General Shift (09:00 AM - 05:00 PM)" },
     companyId: { type: Schema.Types.ObjectId, ref: "Company", required: true },
   },
   { timestamps: true }

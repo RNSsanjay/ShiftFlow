@@ -53,7 +53,7 @@ interface AIInsights {
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const { isOnline } = useStore();
+  const { isOnline, activeShift } = useStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [aiInsights, setAiInsights] = useState<AIInsights | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -62,13 +62,14 @@ export default function DashboardPage() {
   // Fetch metrics
   useEffect(() => {
     const loadStats = async () => {
+      setStatsLoading(true);
       if (!isOnline) {
         setStatsLoading(false);
         return;
       }
 
       try {
-        const res = await fetch("/api/dashboard/stats");
+        const res = await fetch(`/api/dashboard/stats?shift=${activeShift}`);
         if (res.ok) {
           const data = await res.json();
           setStats(data);
@@ -81,18 +82,19 @@ export default function DashboardPage() {
     };
 
     loadStats();
-  }, [isOnline]);
+  }, [isOnline, activeShift]);
 
   // Fetch AI insights
   useEffect(() => {
     const loadAIInsights = async () => {
+      setAiLoading(true);
       if (!isOnline) {
         setAiLoading(false);
         return;
       }
 
       try {
-        const res = await fetch("/api/ai/insights");
+        const res = await fetch(`/api/ai/insights?shift=${activeShift}`);
         if (res.ok) {
           const data = await res.json();
           setAiInsights(data);
@@ -105,7 +107,7 @@ export default function DashboardPage() {
     };
 
     loadAIInsights();
-  }, [isOnline]);
+  }, [isOnline, activeShift]);
 
   if (statsLoading) {
     return (

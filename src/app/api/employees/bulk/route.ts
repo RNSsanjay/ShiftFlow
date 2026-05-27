@@ -104,8 +104,8 @@ export async function POST(req: Request) {
         companyId: session.user.companyId,
         status: "active",
         otEligible: true,
-        pfEnabled: true,
-        esiEnabled: true,
+        pfEnabled: false,
+        esiEnabled: false,
       }));
 
       await Employee.insertMany(recordsToInsert);

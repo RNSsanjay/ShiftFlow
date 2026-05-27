@@ -7,7 +7,7 @@ import { Payroll } from "@/models/Payroll";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await auth();
     if (!session || !session.user || !session.user.companyId) {
@@ -18,21 +18,36 @@ export async function GET() {
       return NextResponse.json({ error: "AI service not configured" }, { status: 500 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const shiftFilter = searchParams.get("shift");
+
     await connectToDatabase();
 
     const companyId = session.user.companyId;
 
-    // 1. Core aggregates
-    const totalEmployees = await Employee.countDocuments({ companyId, status: "active" });
+    // 1. Core aggregates (filtered by shift)
+    const empQuery: any = { companyId, status: "active" };
+    if (shiftFilter && shiftFilter !== "all") {
+      empQuery.shift = shiftFilter;
+    }
+    const totalEmployees = await Employee.countDocuments(empQuery);
 
     // Fetch last 30 days of attendance
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const attendances = await Attendance.find({
+    const attendanceQuery: any = {
       companyId,
       date: { $gte: thirtyDaysAgo },
-    }).populate("employeeId", "name department employeeType");
+    };
+
+    if (shiftFilter && shiftFilter !== "all") {
+      const shiftEmployees = await Employee.find({ companyId, shift: shiftFilter }).select("_id");
+      const employeeIds = shiftEmployees.map((e) => e._id);
+      attendanceQuery.employeeId = { $in: employeeIds };
+    }
+
+    const attendances = await Attendance.find(attendanceQuery).populate("employeeId", "name department employeeType");
 
     // Aggregate statistics in memory
     const employeeStats: Record<string, { name: string; dept: string; present: number; absent: number; halfDay: number; ot: number; total: number }> = {};

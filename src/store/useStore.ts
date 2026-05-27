@@ -20,6 +20,8 @@ interface AppState {
   setIsOnline: (status: boolean) => void;
   selectedDate: string; // YYYY-MM-DD
   setSelectedDate: (date: string) => void;
+  activeShift: string;
+  setActiveShift: (shift: string) => void;
   attendanceQueue: QueuedAttendance[];
   addAttendanceToQueue: (date: string, records: AttendanceRecordInput[]) => void;
   removeAttendanceFromQueue: (date: string) => void;
@@ -33,6 +35,8 @@ export const useStore = create<AppState>()(
       setIsOnline: (status) => set({ isOnline: status }),
       selectedDate: new Date().toISOString().split("T")[0],
       setSelectedDate: (date) => set({ selectedDate: date }),
+      activeShift: "all",
+      setActiveShift: (shift) => set({ activeShift: shift }),
       
       attendanceQueue: [],
       addAttendanceToQueue: (date, records) => {
@@ -55,6 +59,7 @@ export const useStore = create<AppState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         attendanceQueue: state.attendanceQueue,
+        activeShift: state.activeShift,
       }),
     }
   )

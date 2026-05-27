@@ -404,7 +404,9 @@ function RegisterContent() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-300">Provident Fund (PF)</span>
+                      <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        Provident Fund (PF) <span className="text-[9px] text-blue-400 font-semibold px-1 rounded bg-blue-950/40 border border-blue-900/30">Optional</span>
+                      </span>
                       <span className="text-[9px] text-slate-500">Calculate and deduct employee PF contribution</span>
                     </div>
                     <input
@@ -436,7 +438,9 @@ function RegisterContent() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-300">State Insurance (ESI)</span>
+                      <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        State Insurance (ESI) <span className="text-[9px] text-blue-400 font-semibold px-1 rounded bg-blue-950/40 border border-blue-900/30">Optional</span>
+                      </span>
                       <span className="text-[9px] text-slate-500">Deduct employee medical insurance contribution</span>
                     </div>
                     <input
